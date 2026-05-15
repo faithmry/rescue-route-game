@@ -212,7 +212,7 @@ class RescueRouteGame:
         self.title_label = tk.Label(
             title_area,
             text="Rescue Route",
-            font=("Segoe UI", 18, "bold"),
+            font=("Segoe UI", 20, "bold"),
             fg="#f9fafb",
             bg="#111827",
         )
@@ -227,27 +227,136 @@ class RescueRouteGame:
         )
         self.subtitle_label.pack(anchor="w")
 
-        self.stats_label = tk.Label(
-            header,
-            text="",
-            font=("Consolas", 11, "bold"),
-            fg="#facc15",
-            bg="#111827",
-            justify="right",
+        main_area = tk.Frame(self.root, bg="#111827")
+        main_area.pack(padx=14, pady=(0, 10))
+
+        left_panel = tk.Frame(
+            main_area,
+            bg="#1e293b",
+            width=220,
+            padx=12,
+            pady=12,
+            highlightbackground="#334155",
+            highlightthickness=1,
         )
-        self.stats_label.pack(side="right")
+
+        left_panel.pack(side="left", fill="y", padx=(0, 10))
+
+        left_panel.pack_propagate(False)
+
+        tk.Label(
+            left_panel,
+            text="MISSION",
+            font=("Segoe UI", 14, "bold"),
+            fg="white",
+            bg="#1e293b",
+        ).pack(anchor="w", pady=(0, 8))
+
+        tk.Label(
+            left_panel,
+            text=(
+                "Guide the medic to the exit\n"
+                "using the lowest possible\n"
+                "energy cost."
+            ),
+            justify="left",
+            font=("Segoe UI", 10),
+            fg="#cbd5e1",
+            bg="#1e293b",
+        ).pack(anchor="w", pady=(0, 18))
+
+        tk.Label(
+            left_panel,
+            text="TERRAIN",
+            font=("Segoe UI", 12, "bold"),
+            fg="white",
+            bg="#1e293b",
+        ).pack(anchor="w", pady=(0, 8))
+
+        legend_items = [
+            ("Road (1)", "#f7f3e8"),
+            ("Mud (3)", "#a16207"),
+            ("Water (5)", "#38bdf8"),
+            ("Wall", "#1f2937"),
+            ("Exit", "#22c55e"),
+        ]
+
+        for text, color in legend_items:
+            row = tk.Frame(left_panel, bg="#1e293b")
+            row.pack(anchor="w", pady=2)
+
+            tk.Canvas(
+                row,
+                width=18,
+                height=18,
+                bg=color,
+                highlightthickness=0,
+            ).pack(side="left", padx=(0, 8))
+
+            tk.Label(
+                row,
+                text=text,
+                fg="#e2e8f0",
+                bg="#1e293b",
+                font=("Segoe UI", 10),
+            ).pack(side="left")
 
         self.canvas = tk.Canvas(
-            self.root,
+            main_area,
             width=GRID_COLS * CELL_SIZE,
             height=GRID_ROWS * CELL_SIZE,
             bg="#0f172a",
             highlightthickness=0,
         )
-        self.canvas.pack(padx=14, pady=(0, 10))
+        self.canvas.pack(side="left")
+
+        right_panel = tk.Frame(
+            main_area,
+            bg="#1e293b",
+            width=220,
+            padx=12,
+            pady=12,
+            highlightbackground="#334155",
+            highlightthickness=1,
+        )
+        right_panel.pack(side="left", fill="y", padx=(10, 0))
+
+        right_panel.pack_propagate(False)
+
+        tk.Label(
+            right_panel,
+            text="MISSION STATS",
+            font=("Segoe UI", 14, "bold"),
+            fg="white",
+            bg="#1e293b",
+        ).pack(anchor="w", pady=(0, 12))
+
+        
+        self.stats_label = tk.Label(
+            right_panel,
+            text="",
+            justify="left",
+            font=("Consolas", 11, "bold"),
+            fg="#facc15",
+            bg="#1e293b",
+        )
+        self.stats_label.pack(anchor="w")
 
         controls = tk.Frame(self.root, bg="#111827", padx=14, pady=0)
         controls.pack(fill="x", pady=(0, 14))
+
+        self.status_label = tk.Label(
+            self.root,
+            text="STATUS: Manual navigation active",
+            font=("Segoe UI", 10),
+            fg="#cbd5e1",
+            bg="#111827",
+            anchor="w",
+            padx=14,
+            pady=8,
+        )
+
+        self.status_label.pack(fill="x")
 
         self.hint_button = tk.Button(
             controls,
@@ -260,6 +369,9 @@ class RescueRouteGame:
             activeforeground="white",
             relief="flat",
             font=("Segoe UI", 10, "bold"),
+            cursor="hand2",
+            padx=8,
+            pady=6,
         )
         self.hint_button.pack(side="left", padx=(0, 8))
 
@@ -274,6 +386,9 @@ class RescueRouteGame:
             activeforeground="white",
             relief="flat",
             font=("Segoe UI", 10, "bold"),
+            cursor="hand2",
+            padx=8,
+            pady=6,
         )
         self.solve_button.pack(side="left", padx=(0, 8))
 
@@ -288,6 +403,9 @@ class RescueRouteGame:
             activeforeground="white",
             relief="flat",
             font=("Segoe UI", 10, "bold"),
+            cursor="hand2",
+            padx=8,
+            pady=6,
         )
         self.restart_button.pack(side="left", padx=(0, 8))
 
@@ -302,6 +420,9 @@ class RescueRouteGame:
             activeforeground="white",
             relief="flat",
             font=("Segoe UI", 10, "bold"),
+            cursor="hand2",
+            padx=8,
+            pady=6,
         )
         self.next_button.pack(side="left")
 
@@ -348,6 +469,7 @@ class RescueRouteGame:
         self.title_label.config(text=f"Rescue Route: {level['name']}")
         self.subtitle_label.config(text=level["description"])
         self.hint_button.config(text="Show Dijkstra Hint")
+        self.status_label.config(text="STATUS: Manual navigation active")
         self.draw()
 
     def next_level(self):
@@ -362,6 +484,7 @@ class RescueRouteGame:
 
         self.showing_hint = not self.showing_hint
         self.hint_button.config(text="Hide Hint" if self.showing_hint else "Show Dijkstra Hint")
+        self.status_label.config(text="STATUS: Dijkstra route visualized")
         if self.showing_hint:
             self.animate_dijkstra()
         else:
@@ -398,6 +521,7 @@ class RescueRouteGame:
         self.auto_running = True
         self.showing_hint = True
         self.hint_button.config(text="Hide Hint")
+        self.status_label.config(text="STATUS: Auto Rescue engaged")
         self.path_animation = path
         self.follow_path(path[1:], 0)
 
@@ -486,6 +610,25 @@ class RescueRouteGame:
         path_set = set(self.path_animation if self.showing_hint else [])
         visited_set = set(self.visited_animation if self.showing_hint else [])
 
+        if self.showing_hint and len(self.path_animation) > 1:
+            for i in range(len(self.path_animation) - 1):
+                row1, col1 = self.path_animation[i]
+                row2, col2 = self.path_animation[i + 1]
+
+                x1 = col1 * CELL_SIZE + CELL_SIZE // 2
+                y1 = row1 * CELL_SIZE + CELL_SIZE // 2
+
+                x2 = col2 * CELL_SIZE + CELL_SIZE // 2
+                y2 = row2 * CELL_SIZE + CELL_SIZE // 2
+
+                self.canvas.create_line(
+                    x1, y1,
+                    x2, y2,
+                    fill="#facc15",
+                    width=4,
+                    smooth=True,
+                )
+
         for row in range(len(self.grid)):
             for col in range(len(self.grid[0])):
                 position = (row, col)
@@ -501,7 +644,16 @@ class RescueRouteGame:
                 y1 = row * CELL_SIZE
                 x2 = x1 + CELL_SIZE
                 y2 = y1 + CELL_SIZE
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="#111827")
+                padding = 2
+                self.canvas.create_rectangle(
+                    x1 + padding,
+                    y1 + padding,
+                    x2 - padding,
+                    y2 - padding,
+                    fill=color,
+                    outline="#0b1220",
+                    width=2,
+                )
 
                 if tile == MUD:
                     self.canvas.create_text(x1 + 17, y1 + 17, text="3", fill="#fef3c7", font=("Segoe UI", 10, "bold"))
@@ -524,8 +676,8 @@ class RescueRouteGame:
             center_x + 12,
             center_y + 12,
             fill="#ef4444",
-            outline="#fecaca",
-            width=2,
+            outline="#fee2e2",
+            width=3,
         )
         self.canvas.create_text(center_x, center_y, text="+", fill="white", font=("Segoe UI", 13, "bold"))
 
